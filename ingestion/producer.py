@@ -4,6 +4,10 @@ import logging
 import dotenv
 from emoji import demojize
 
+from kafka import KafkaProducer
+producer = KafkaProducer(bootstrap_servers='localhost:9092')
+
+
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s — %(message)s',
@@ -15,19 +19,12 @@ logging.basicConfig(level=logging.DEBUG,
 Get token here: https://twitchapps.com/tmi/
 """
 
-
-# dotenv.load_dotenv()
-# server = os.getenv('SERVER')
-# port = int(os.getenv('PORT'))
-# nickname = os.getenv('USERNAME')
-# token = os.getenv('TWITCH_OAUTH_TOKEN')
-# channel = '#ohnepixel'
-
-server = 'irc.chat.twitch.tv'
-port = 6667
-nickname = 'justinfan67420'
-token = 'SCHMOOPIIE'
-channel = '#lirik'
+dotenv.load_dotenv()
+server = os.getenv('SERVER')
+port = int(os.getenv('PORT'))
+nickname = os.getenv('USERNAME')
+token = os.getenv('TWITCH_OAUTH_TOKEN')
+channel = '#thebausffs'
 
 def main():
     sock = socket.socket()
@@ -43,7 +40,8 @@ def main():
                 # sock.send("PONG :tmi.twitch.tv\n".encode('utf-8'))
                 sock.send("PONG\n".encode('utf-8'))
             elif len(resp) > 0:
-                logging.info(demojize(resp))
+                # logging.info(demojize(resp))
+                producer.send('twitch_chat_analyzer', demojize(resp).encode('utf-8'))
 
     except KeyboardInterrupt:
         sock.close()
