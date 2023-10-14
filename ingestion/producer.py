@@ -24,7 +24,7 @@ server = os.getenv('SERVER')
 port = int(os.getenv('PORT'))
 nickname = os.getenv('USERNAME')
 token = os.getenv('TWITCH_OAUTH_TOKEN')
-channel = '#thebausffs'
+channel = '#dota2ti'
 
 def main():
     sock = socket.socket()
