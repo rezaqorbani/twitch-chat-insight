@@ -1,5 +1,41 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, regexp_extract, split
+from pyspark.sql.functions import col, regexp_extract, split, udf
+from pyspark.sql.types import StringType
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+# Define your custom emote values
+twitch_emotes = {
+    '<3': 0.4,
+    '4head': 1,
+    'LUL':1.5,
+    'LuL':1.5,
+    'LULW':1.5,
+    'KEKW':1.5,
+    'POG':1.5,
+    'pog':1.5,
+    'Pog':1.5,
+    'OMEGALUL':1.5,
+    'POGGERS':1.5,
+    'EZ':1.5,
+    'GIGA':1.5,
+    'CHAD':1.5,
+    'babyrage': -0.7,
+    'biblethump': -0.7,
+    'blessrng': 0.7,
+    'bloodtrail': 0.7,
+    'coolstorybob': -1,
+    'residentsleeper': -1,
+    'kappa': 0.5,
+    'lul': 1,
+    'pogchamp': 1.5,
+    'heyguys': 1,
+    'wutface': -1.5,
+    'kreygasm': 1,
+    'seemsgood': 0.7,
+    'kappapride': 0.7,
+    'feelsgoodman': 1,
+    'notlikethis': -1
+}
 
 # Create a SparkSession
 spark = SparkSession.builder.appName("TwitchChatProcessing").getOrCreate()
@@ -21,6 +57,26 @@ split_message = kafka_stream.select(
     regexp_extract(col("raw_message"), r'PRIVMSG (\#\w+) :(.*)\r\n', 2).alias("message"),
     regexp_extract(col("raw_message"), r':(\w+)!', 1).alias("username")
 )
+
+# Define a UDF for sentiment analysis
+def get_sentiment(message):
+    analyzer = SentimentIntensityAnalyzer()
+    # Update the analyzer's lexicon with custom emote values
+    analyzer.lexicon.update(twitch_emotes)
+    sentiment = analyzer.polarity_scores(message)
+
+    if sentiment["compound"] >= 0.05:
+        return "positive"
+    elif sentiment["compound"] <= -0.05:
+        return "negative"
+    else:
+        return "neutral"
+
+# Create a UDF from the sentiment analysis function
+sentiment_udf = udf(get_sentiment, StringType())
+
+# Add the calculated sentiment as a new column
+split_message = split_message.withColumn("sentiment", sentiment_udf(col("message")))
 
 # Output the results to the console (you can replace this with your desired sink)
 query = split_message \
