@@ -2,6 +2,15 @@
 
 ## Setup
 
+### AstraPy Requirements
+
+```bash
+pip install astrapy
+
+pip install appengine-python-standard
+```
+
+
 ### Kafka
 
 * Get kafka from [here](https://www.apache.org/dyn/closer.cgi?path=/kafka/3.6.0/kafka_2.13-3.6.0.tgz)
