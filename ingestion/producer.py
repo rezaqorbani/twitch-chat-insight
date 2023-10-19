@@ -16,7 +16,7 @@ nickname = os.getenv('USERNAME')
 token = os.getenv('TWITCH_OAUTH_TOKEN')
 
 # Define a list of channels you want to listen to
-channels = ['#dota2ti', '#xQc', '#LIRIK']
+channels = ['#zackrawrr', '#thebausffs', '#forsen']
 
 def main():
     sock = socket.socket()

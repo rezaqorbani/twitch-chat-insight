@@ -1,42 +1,8 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, regexp_extract, split, udf
+from pyspark.sql.functions import col, regexp_extract,split, udf
 from pyspark.sql.types import StringType
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-
-from astrapy.client import create_astra_client
-import uuid
-
-# Database information
-ASTRA_DB_ID = 'c59f29c8-a71a-430b-a1e5-bc1a7045a21e'
-ASTRA_DB_REGION = 'us-east1'
-ASTRA_DB_APPLICATION_TOKEN = 'AstraCS:nLrfGSfCZySFpUKEoPKevCRP:ddfaa3d6111b7510e4b3dd423c05c025e3f179b4f6604eab38724b9c85302f29'
-ASTRA_DB_KEYSPACE = 'keyspace_twitch_chat_insight'
-
-TABLE_NAME = 'twitch_inputs_table'
-
-# Database client
-astra_client = create_astra_client(astra_database_id=ASTRA_DB_ID,
-                                 astra_database_region=ASTRA_DB_REGION,
-                                 astra_application_token=ASTRA_DB_APPLICATION_TOKEN)
-
-def write_to_cassandra(channel_name, message, username, sentiment):
-    row_definition = {"channel_name": channel_name,
-                      "message": message,
-                      "username": username,
-                      "sentiment": sentiment,
-                      "timestamp": str(uuid.uuid1()),
-                      }
-    row = astra_client.rest.add_row(keyspace=ASTRA_DB_KEYSPACE,
-                                    table=TABLE_NAME,
-                                    row=row_definition)
-def write_to_cassandra_row(row):
-    channel_name = row["channel_name"]
-    message = row["message"]
-    username = row["username"]
-    sentiment = row["sentiment"]
-    write_to_cassandra(channel_name, message, username, sentiment)
-
-# Define your custom emote values
+#import com.datastax.spark.connector.streaming._
 twitch_emotes = {
     '<3': 0.4,
     '4head': 1,
@@ -69,11 +35,20 @@ twitch_emotes = {
     'feelsgoodman': 1,
     'notlikethis': -1
 }
-
 # Create a SparkSession
-spark = SparkSession.builder.appName("TwitchChatProcessing").getOrCreate()
+checkpoint_location = "/mnt/c/Users/Admin/twitch-chat-insight/checkpoint"
+spark = SparkSession.builder.appName("TwitchChatProcessing").config("spark.sql.streaming.checkpointLocation", checkpoint_location).getOrCreate()
+
 # Set the log level to WARN (you can use INFO, ERROR, or OFF)
 spark.sparkContext.setLogLevel("WARN")
+
+# Define the Cassandra connection properties
+cassandra_host = "localhost"  # Update this with your Cassandra host
+cassandra_port = "9042"       # Update this with your Cassandra port
+
+# Set Cassandra configuration in Spark
+spark.conf.set("spark.cassandra.connection.host", cassandra_host)
+spark.conf.set("spark.cassandra.connection.port", cassandra_port)
 
 # Define the Kafka stream
 kafka_stream = spark.readStream.format("kafka") \
@@ -91,6 +66,7 @@ split_message = kafka_stream.select(
     regexp_extract(col("raw_message"), r':(\w+)!', 1).alias("username")
 )
 
+
 # Define a UDF for sentiment analysis
 def get_sentiment(message):
     analyzer = SentimentIntensityAnalyzer()
@@ -104,33 +80,33 @@ def get_sentiment(message):
         return "negative"
     else:
         return "neutral"
-
 # Create a UDF from the sentiment analysis function
 sentiment_udf = udf(get_sentiment, StringType())
 
 # Add the calculated sentiment as a new column
 split_message = split_message.withColumn("sentiment", sentiment_udf(col("message")))
-# Select the relevant columns for Cassandra
-#cassandra_data = split_message.select("channel_name", "message", "username", "sentiment")
+# Filter out records with empty channel_name or username
+split_message = split_message.filter((col("channel_name") != "") & (col("username") != ""))
 
-# Iterate through the rows and write to Cassandra
-#cassandra_data.foreach(lambda row: write_to_cassandra(row["channel_name"], row["message"], row["username"], row["sentiment"]))
+# Define the Cassandra keyspace and table
+cassandra_keyspace = "twitch_chat_keyspace"  # Your keyspace name
+cassandra_table = "twitch_chat_messages"      # Your table name
 
-# Output the results to the console
-console_query = split_message \
-    .writeStream \
+# Write the data to Cassandra
+query_cassandra=split_message.writeStream \
+    .format("org.apache.spark.sql.cassandra") \
+    .option("keyspace", cassandra_keyspace) \
+    .option("table", cassandra_table) \
+    .option("checkpointLocation", checkpoint_location) \
+    .outputMode("append") \
+    .start()
+
+#Start the Kafka stream processing
+query = split_message.writeStream \
     .outputMode("append") \
     .format("console") \
     .start()
+# Wait for the stream to terminate
 
-# Output the results to the console (you can replace this with your desired sink)
-query = split_message \
-    .writeStream \
-    .foreach(write_to_cassandra_row) \
-    .outputMode("append") \
-    .start()
-
-console_query.awaitTermination()
-# Wait for the stream to terminate (you can stop it with Ctrl+C)
+query_cassandra.awaitTermination()
 query.awaitTermination()
-
