@@ -3,6 +3,33 @@ from pyspark.sql.functions import col, regexp_extract, split, udf
 from pyspark.sql.types import StringType
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
+from astrapy.client import create_astra_client
+import uuid
+
+# Database information
+ASTRA_DB_ID = 'c59f29c8-a71a-430b-a1e5-bc1a7045a21e'
+ASTRA_DB_REGION = 'us-east1'
+ASTRA_DB_APPLICATION_TOKEN = 'AstraCS:nLrfGSfCZySFpUKEoPKevCRP:ddfaa3d6111b7510e4b3dd423c05c025e3f179b4f6604eab38724b9c85302f29'
+ASTRA_DB_KEYSPACE = 'keyspace_twitch_chat_insight'
+
+TABLE_NAME = 'twitch_inputs_table'
+
+# Database client
+astra_client = create_astra_client(astra_database_id=ASTRA_DB_ID,
+                                 astra_database_region=ASTRA_DB_REGION,
+                                 astra_application_token=ASTRA_DB_APPLICATION_TOKEN)
+
+def write_to_cassandra(channel_name, message, username, sentiment):
+    row_definition = {"channel_name": channel_name,
+                      "message": message,
+                      "username": username,
+                      "sentiment": sentiment,
+                      "timestamp": str(uuid.uuid1()),
+                      }
+    row = astra_client.rest.add_row(keyspace=ASTRA_DB_KEYSPACE,
+                                    table=TABLE_NAME,
+                                    row=row_definition)
+
 # Define your custom emote values
 twitch_emotes = {
     '<3': 0.4,
