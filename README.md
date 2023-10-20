@@ -2,13 +2,13 @@
 
 ## Setup
 
-### AstraPy Requirements
+<!-- ### AstraPy Requirements
 
 ```bash
 pip install astrapy
 
 pip install appengine-python-standard
-```
+``` -->
 
 ### Kafka
 
@@ -92,18 +92,35 @@ CREATE TABLE IF NOT EXISTS twitch_chat_messages (
     message TEXT,
     username TEXT,
     sentiment TEXT,
+    timestamp TIMESTAMP,
     PRIMARY KEY (channel_name, username)
 ); 
 ```
 
+### Consumer
+
 * Run the pysparkScriptLocal.py
 
 ```bash
-spark-submit --packages com.datastax.spark:spark-cassandra-connector_2.12:3.4.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0  pysparkScriptLocal.py
+spark-submit --packages com.datastax.spark:spark-cassandra-connector_2.12:3.4.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0  ./processing/pysparkScriptLocal.py
 ```
 
-* In cqlsh query the data in the table by using:
+* In cqlsh you can query the data in the table by using:
 
 ```sql
 SELECT * FROM twitch_chat_messages; 
+```
+
+### API
+
+* Start the REST API (in separate terminal):
+
+```bash
+spark-submit --packages com.datastax.spark:spark-cassandra-connector_2.12:3.4.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0  ./flask/cassandra_rest_api.py
+```
+
+* You can now get the lastest row from the server with the REST API:
+
+```bash
+curl http://localhost:5000/
 ```

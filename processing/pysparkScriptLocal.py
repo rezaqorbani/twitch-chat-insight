@@ -1,8 +1,12 @@
 import os
+import sys
+import time
+import datetime
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, regexp_extract,split, udf
+from pyspark.sql.functions import col, regexp_extract,split, udf, current_timestamp
 from pyspark.sql.types import StringType
+
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
@@ -39,13 +43,13 @@ twitch_emotes = {
     'feelsgoodman': 1,
     'notlikethis': -1
 }
-# Create a SparkSession
-checkpoint_location = "./checkpoint/"
-# create checkpoint directory
 
+# create checkpoint directory
+checkpoint_location = "./checkpoint/"
 if not os.path.exists(checkpoint_location):
     os.makedirs(checkpoint_location)
-    
+
+# Create a SparkSession
 spark = SparkSession.builder.appName("TwitchChatProcessing").config("spark.sql.streaming.checkpointLocation", checkpoint_location).getOrCreate()
 
 # Set the log level to WARN (you can use INFO, ERROR, or OFF)
@@ -72,7 +76,7 @@ kafka_stream = kafka_stream.selectExpr("CAST(value AS STRING) as raw_message")
 split_message = kafka_stream.select(
     regexp_extract(col("raw_message"), r'PRIVMSG (\#\w+) :(.*)\r\n', 1).alias("channel_name"),
     regexp_extract(col("raw_message"), r'PRIVMSG (\#\w+) :(.*)\r\n', 2).alias("message"),
-    regexp_extract(col("raw_message"), r':(\w+)!', 1).alias("username")
+    regexp_extract(col("raw_message"), r':(\w+)!', 1).alias("username"),
 )
 
 # Define a UDF for sentiment analysis
@@ -88,17 +92,28 @@ def get_sentiment(message):
         return "negative"
     else:
         return "neutral"
+    
+# Define a UDF for the current timestamp
+def get_timestamp():
+    return int(time.time())
+    
 # Create a UDF from the sentiment analysis function
 sentiment_udf = udf(get_sentiment, StringType())
 
+# Create a UDF from the timestamp function
+timestamp_udf = udf(get_timestamp, StringType())
+
 # Add the calculated sentiment as a new column
 split_message = split_message.withColumn("sentiment", sentiment_udf(col("message")))
+
+# Add a timestamp column
+split_message = split_message.withColumn("timestamp", current_timestamp())
 # Filter out records with empty channel_name or username
 split_message = split_message.filter((col("channel_name") != "") & (col("username") != ""))
 
 # Define the Cassandra keyspace and table
 cassandra_keyspace = "twitch_chat_keyspace"  # Your keyspace name
-cassandra_table = "twitch_chat_messages"      # Your table name
+cassandra_table = "twitch_chat_keyspace"      # Your table name
 
 # Write the data to Cassandra
 query_cassandra=split_message.writeStream \
