@@ -93,27 +93,21 @@ def get_sentiment(message):
     else:
         return "neutral"
     
-# Define a UDF for the current timestamp
-def get_timestamp():
-    return int(time.time())
-    
 # Create a UDF from the sentiment analysis function
 sentiment_udf = udf(get_sentiment, StringType())
-
-# Create a UDF from the timestamp function
-timestamp_udf = udf(get_timestamp, StringType())
 
 # Add the calculated sentiment as a new column
 split_message = split_message.withColumn("sentiment", sentiment_udf(col("message")))
 
 # Add a timestamp column
 split_message = split_message.withColumn("timestamp", current_timestamp())
+
 # Filter out records with empty channel_name or username
 split_message = split_message.filter((col("channel_name") != "") & (col("username") != ""))
 
 # Define the Cassandra keyspace and table
 cassandra_keyspace = "twitch_chat_keyspace"  # Your keyspace name
-cassandra_table = "twitch_chat_keyspace"      # Your table name
+cassandra_table = "twitch_chat_messages"      # Your table name
 
 # Write the data to Cassandra
 query_cassandra=split_message.writeStream \
