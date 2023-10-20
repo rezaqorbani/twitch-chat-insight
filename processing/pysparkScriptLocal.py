@@ -1,7 +1,11 @@
+import os
+
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, regexp_extract,split, udf
 from pyspark.sql.types import StringType
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+
 #import com.datastax.spark.connector.streaming._
 twitch_emotes = {
     '<3': 0.4,
@@ -36,7 +40,12 @@ twitch_emotes = {
     'notlikethis': -1
 }
 # Create a SparkSession
-checkpoint_location = "/mnt/c/Users/Admin/twitch-chat-insight/checkpoint"
+checkpoint_location = "./checkpoint/"
+# create checkpoint directory
+
+if not os.path.exists(checkpoint_location):
+    os.makedirs(checkpoint_location)
+    
 spark = SparkSession.builder.appName("TwitchChatProcessing").config("spark.sql.streaming.checkpointLocation", checkpoint_location).getOrCreate()
 
 # Set the log level to WARN (you can use INFO, ERROR, or OFF)
@@ -65,7 +74,6 @@ split_message = kafka_stream.select(
     regexp_extract(col("raw_message"), r'PRIVMSG (\#\w+) :(.*)\r\n', 2).alias("message"),
     regexp_extract(col("raw_message"), r':(\w+)!', 1).alias("username")
 )
-
 
 # Define a UDF for sentiment analysis
 def get_sentiment(message):

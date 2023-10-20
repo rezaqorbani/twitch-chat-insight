@@ -12,7 +12,7 @@ pip install appengine-python-standard
 
 ### Kafka
 
-* Get kafka from [here](https://www.apache.org/dyn/closer.cgi?path=/kafka/3.6.0/kafka_2.13-3.6.0.tgz)
+* Get kafka from [here](https://kafka.apache.org/downloads)
 
 ```bash
 wget https://dlcdn.apache.org/kafka/3.6.0/kafka_2.13-3.6.0.tgz
@@ -45,28 +45,43 @@ bin/kafka-topics.sh --create --topic twitch_chat_analyzer --bootstrap-server loc
 ```bash
 python ingestion/producer.py
 ```
-### Consumer
+
+<!-- ### (optional) Consumer
 
 * start consumer (in separate terminal)
 
 ```bash
 python ingestion/consumer.py
-```
+``` -->
 
-### Spark
+<!-- ### Spark
 
 * Start Spark (in separate terminal)
 
 ```bash
 spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 /path/to/project/inference/pysparkScript.py 
+``` -->
+
+### Cassandra
+
+* Get cassandra from [here](https://cassandra.apache.org/download/)
+* Start Cassandra before running Spark (in separate terminal):
+
+```bash
+cd path/to/cassandra
+bin/cassandra
 ```
 
-### Cassandra(if used locally)
-* Install cassandra
-* Start Cassandra before running Spark(in separate terminal)
-* start cqlsh(in separate terminal)
+* start cqlsh (in separate terminal):
+
+```bash
+cd path/to/cassandra
+bin/cqlsh
+```
+
 * In cqlsh create a keyspace and table schema for example(Primary key can be changed):
-```cqlsh
+  
+```sql
 CREATE KEYSPACE IF NOT EXISTS twitch_chat_keyspace
 WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1};
 
@@ -80,12 +95,15 @@ CREATE TABLE IF NOT EXISTS twitch_chat_messages (
     PRIMARY KEY (channel_name, username)
 ); 
 ```
-* start zookeeper, kafka server, producer.py, consumer.py in separate terminals.
+
 * Run the pysparkScriptLocal.py
+
 ```bash
 spark-submit --packages com.datastax.spark:spark-cassandra-connector_2.12:3.4.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0  pysparkScriptLocal.py
 ```
+
 * In cqlsh query the data in the table by using:
-```cqlsh
+
+```sql
 SELECT * FROM twitch_chat_messages; 
 ```
