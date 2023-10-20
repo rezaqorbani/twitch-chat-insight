@@ -105,16 +105,18 @@ query_cassandra=split_message.writeStream \
     .format("org.apache.spark.sql.cassandra") \
     .option("keyspace", cassandra_keyspace) \
     .option("table", cassandra_table) \
-    .option("checkpointLocation", checkpoint_location) \
     .outputMode("append") \
     .start()
+#    .option("checkpointLocation", checkpoint_location) \
+#    .outputMode("append") \
+#    .start()
 
 #Start the Kafka stream processing
-query = split_message.writeStream \
-    .outputMode("append") \
-    .format("console") \
-    .start()
+#query = split_message.writeStream \
+#    .outputMode("append") \
+#    .format("console") \
+#    .start()
 # Wait for the stream to terminate
 
 query_cassandra.awaitTermination()
-query.awaitTermination()
+#query.awaitTermination()
