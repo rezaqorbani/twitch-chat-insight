@@ -26,8 +26,10 @@ def get_latest_row():
     
     # Convert pyspark DataFrame to json
     result = [row.asDict() for row in result.collect()]
-
-    return jsonify(result), 200
+    result = jsonify(result)
+    result.headers.add('Access-Control-Allow-Origin', '*')
+    
+    return result, 200
 
 if __name__ == "__main__":
     app.run(debug=True)
