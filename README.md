@@ -9,6 +9,14 @@ pip install astrapy
 
 pip install appengine-python-standard
 ``` -->
+* make sure to have a venev activated and then install the requirements
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
 * change the name of the file `.env.example` to `.env` and keep the values as they are or change them to your own values
 
 ### Kafka
@@ -20,7 +28,8 @@ wget https://dlcdn.apache.org/kafka/3.6.0/kafka_2.13-3.6.0.tgz
 tar -xzf kafka_2.13-3.6.0.tgz
 cd kafka_2.13-3.6.0
 ```
-* Build the project first if necessary
+
+* (optionl, relevant to mac) Build the project first if necessary
 
 ```bash
 ./gradlew jar -PscalaVersion=2.13.11
@@ -111,7 +120,7 @@ CREATE TABLE IF NOT EXISTS twitch_chat_messages (
 spark-submit --packages com.datastax.spark:spark-cassandra-connector_2.12:3.4.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0  ./processing/pysparkScriptLocal.py
 ```
 
-* In cqlsh you can query the data in the table by using:
+* (optional) In cqlsh you can query the data in the table by using:
 
 ```sql
 SELECT * FROM twitch_chat_messages; 

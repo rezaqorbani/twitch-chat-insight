@@ -20,8 +20,8 @@ token = os.getenv('TWITCH_OAUTH_TOKEN')
 # nickname = 'SCHMOOPIIE'
 # token = 'justinfan67420'
 
-# Define a list of channels you want to listen to
-channels = ['#zackrawrr']
+# Define the channel you want to join
+channels = ['#dota2ti']
 
 def main():
     sock = socket.socket()
