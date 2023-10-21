@@ -45,7 +45,7 @@ function myMain (evt) {
             if (xhr.readyState == 4 && xhr.status == 200) {
               const sentiment_data = xhr.response;
               console.log(sentiment_data);
-              switch(sentiment_data.sentiment)
+              switch(sentiment_data[0].sentiment)
               {
                 case 'neutral':
                     insight.innerHTML = "Chat status: &#128578;";
