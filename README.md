@@ -19,6 +19,11 @@ wget https://dlcdn.apache.org/kafka/3.6.0/kafka_2.13-3.6.0.tgz
 tar -xzf kafka_2.13-3.6.0.tgz
 cd kafka_2.13-3.6.0
 ```
+* Build the project first if necessary
+
+```bash
+./gradlew jar -PscalaVersion=2.13.11
+```
 
 * Start zookeeper and kafka (in separate terminals)
 
