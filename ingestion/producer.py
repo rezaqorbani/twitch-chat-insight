@@ -15,8 +15,13 @@ port = int(os.getenv('PORT'))
 nickname = os.getenv('USERNAME')
 token = os.getenv('TWITCH_OAUTH_TOKEN')
 
+# server = 'irc.chat.twitch.tv'
+# port = 6667
+# nickname = 'SCHMOOPIIE'
+# token = 'justinfan67420'
+
 # Define a list of channels you want to listen to
-channels = ['#s1mple']
+channels = ['#thebausffs']
 
 def main():
     sock = socket.socket()
