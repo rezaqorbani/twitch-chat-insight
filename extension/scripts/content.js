@@ -18,7 +18,7 @@ function myMain (evt) {
 
 
     let insight = document.createElement("div");
-    insight.innerHTML = "Chat status: &#129395;";
+    // insight.innerHTML = "Chat status: &#129395;";
     insight.style.position = "absolute";
     insight.style.color = "white";
     insight.style.top = "60px";
@@ -63,7 +63,7 @@ function myMain (evt) {
               console.log(`Error: ${xhr.status}`);
             }
           };
-    }, 5000);
+    }, 1000);
 }
 
 
