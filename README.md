@@ -9,6 +9,7 @@ pip install astrapy
 
 pip install appengine-python-standard
 ``` -->
+* change the name of the file `.env.example` to `.env` and keep the values as they are or change them to your own values
 
 ### Kafka
 
