@@ -1,6 +1,6 @@
 # twitch-chat-insight
 Twitch chat insight helps to see the sentiment of the 'chat' in a give Twitch livestream in real-time. The sentiment is represented as a emoji and is displayed alongside the stream using a Chrome extension.
-
+![Screenshot of live chat sentiment](misc/twitch-insight.jpeg)
 ## Setup
 
 <!-- ### AstraPy Requirements

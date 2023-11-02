@@ -21,7 +21,7 @@ token = os.getenv('TWITCH_OAUTH_TOKEN')
 # token = 'justinfan67420'
 
 # Define the channel you want to join
-channels = ['#dota2ti']
+channels = ['#caedrel']
 
 def main():
     sock = socket.socket()
